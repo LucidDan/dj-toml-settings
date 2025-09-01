@@ -1,6 +1,10 @@
+import importlib
 import logging
+import os
 from pathlib import Path
 from typing import Any
+
+from typeguard import typechecked
 
 from dj_toml_settings.toml_parser import Parser
 
@@ -12,10 +16,32 @@ TOML_SETTINGS_FILES = [
 ]
 
 
+@typechecked
 def configure_toml_settings(
-    data: dict, base_dir: Path = Path("."), toml_settings_files: list[str] | None = None
+    data: dict | None = None, base_dir: Path = Path("."), toml_settings_files: list[str] | None = None
 ) -> None:
-    data.update(get_toml_settings(data=data, base_dir=base_dir, toml_settings_files=toml_settings_files))
+    """Configure Django settings from TOML files.
+
+    Args:
+        base_dir: Base directory to look for TOML files
+        data: Dictionary to update with settings from TOML files
+
+    Returns:
+        The updated dictionary with settings from TOML files
+    """
+
+    toml_settings = get_toml_settings(data=data, base_dir=base_dir, toml_settings_files=toml_settings_files)
+
+    if data is not None:
+        data.update(toml_settings)
+    else:
+        if django_settings_module := os.getenv("DJANGO_SETTINGS_MODULE"):
+            module = importlib.import_module(django_settings_module)
+
+            for k, v in toml_settings.items():
+                setattr(module, k, v)
+
+        raise RuntimeError("No DJANGO_SETTINGS_MODULE environment variable configured")
 
 
 def get_toml_settings(
