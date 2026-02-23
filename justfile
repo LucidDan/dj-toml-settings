@@ -13,3 +13,6 @@ fetch:
 
 serve:
   cd example && uv run python manage.py runserver
+
+serve-minimal:
+  cd example_minimal && uv run python manage.py runserver

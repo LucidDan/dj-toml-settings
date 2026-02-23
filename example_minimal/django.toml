@@ -1,0 +1,9 @@
+[tool.django]
+SECRET_KEY = { "$env" = "SECRET_KEY" }
+DEBUG = true
+ROOT_URLCONF = "project.urls"
+WSGI_APPLICATION = "project.wsgi.application"
+
+[tool.django.envs.production]
+DEBUG = false
+ALLOWED_HOSTS = ["example.com"]
