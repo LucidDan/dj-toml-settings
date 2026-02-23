@@ -244,7 +244,6 @@ class TypeParser(DictParser):
         "db",
         "database",
         "cache",
-        "email",
         "path",
     ]
 
@@ -293,8 +292,6 @@ class TypeParser(DictParser):
                     return parse_database_url(str(resolved_value))
                 case "cache":
                     return parse_cache_url(str(resolved_value))
-                case "email":
-                    return parse_email_url(str(resolved_value))
                 case "path":
                     return Path(resolved_value).resolve()
                 case _:

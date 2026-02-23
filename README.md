@@ -27,10 +27,9 @@ ALLOWED_HOSTS = [
 SITE_ID = { "$int" = "1" }
 SITE_ID = { "$value" = "1", "$type" = "int" }  # This is equivalent to the previous line
 
-# Database, cache, and email URLs can be parsed and converted to typical Django dictionary settings
+# Database and cache URLs can be parsed and converted to typical Django dictionary settings
 DATABASES = { default = { "$db" = "postgres://user:pass@localhost:5432/dbname" } }
 CACHES = { default = { "$cache" = "redis://127.0.0.1:6379/1" } }
-EMAIL = { "$email" = "smtp://user:pass@smtp.example.com:587?tls=True" }
 
 # This is an implicit dictionary and equivalent to `COLTRANE = { TITLE = "Example blog" }`
 [tool.django.COLTRANE]
@@ -168,19 +167,16 @@ Specifies a value for a variable.
 SITE_ID = { "$value" = 1 }
 ```
 
-#### URL Parsing Styles
-
-Two styles are supported for parsing database, cache, and email URLs: **special** and **cast**.
+Two styles are supported for parsing database and cache URLs: **special** and **cast**.
 
 **Special**
 
-Use the `$db`, `$cache`, or `$email` operator.
+Use the `$db` or `$cache` operator.
 
 ```toml
 [tool.django]
 DATABASES = { default = { "$db" = "postgres://user:pass@localhost:5432/dbname" } }
 CACHES = { default = { "$cache" = "redis://127.0.0.1:6379/1" } }
-EMAIL = { "$email" = "smtp://user:pass@smtp.example.com:587?tls=True" }
 ```
 
 **Cast**
@@ -215,13 +211,11 @@ This will override any variables defined in `settings.py` with settings from the
 
 ```python
 # settings.py
-from pathlib import Path
 from dj_toml_settings import configure_toml_settings
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 ...
 
-configure_toml_settings(base_dir=BASE_DIR, data=globals())
+configure_toml_settings(data=globals())
 ```
 
 ### [nanodjango](https://nanodjango.readthedocs.io) 

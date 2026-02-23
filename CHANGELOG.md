@@ -3,8 +3,8 @@
 ## 0.6.0
 
 - Support integer access for lists using numeric sub-keys (e.g. `[tool.django.TEMPLATES.0]`).
-- Add internal URL parsing support for database, cache, and email settings.
-  - New `$type` values: `db`, `database`, `cache`, and `email`.
+- Add internal URL parsing support for database and cache settings.
+  - New `$type` values: `db`, `database`, and `cache`.
 - Improved deep dictionary parsing to handle nested settings and special operators like `$insert` at any depth.
 - Support for "path" casting for `$type`.
 

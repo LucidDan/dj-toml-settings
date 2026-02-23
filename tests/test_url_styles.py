@@ -49,28 +49,6 @@ CACHES = { default = { "$value" = "redis://127.0.0.1:6379/1", "$type" = "cache" 
     assert settings["CACHES"]["default"]["BACKEND"] == "django.core.cache.backends.redis.RedisCache"
 
 
-def test_email_shorthand(tmp_path):
-    toml_content = """
-[tool.django]
-EMAIL = { "$email" = "smtp://user:pass@smtp.example.com:587" }
-"""
-    toml_file = tmp_path / "shorthand_email.toml"
-    toml_file.write_text(toml_content)
-    settings = Parser(toml_file).parse_file()
-    assert settings["EMAIL"]["EMAIL_BACKEND"] == "django.core.mail.backends.smtp.EmailBackend"
-
-
-def test_email_explicit(tmp_path):
-    toml_content = """
-[tool.django]
-EMAIL = { "$value" = "smtp://user:pass@smtp.example.com:587", "$type" = "email" }
-"""
-    toml_file = tmp_path / "explicit_email.toml"
-    toml_file.write_text(toml_content)
-    settings = Parser(toml_file).parse_file()
-    assert settings["EMAIL"]["EMAIL_BACKEND"] == "django.core.mail.backends.smtp.EmailBackend"
-
-
 def test_shorthand_with_aliases(tmp_path):
     toml_content = """
 [tool.django]
