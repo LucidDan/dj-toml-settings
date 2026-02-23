@@ -736,6 +736,38 @@ STATIC_ROOT = "${BASE_DIR}/staticfiles"
     assert expected == actual
 
 
+def test_variable_in_nested(tmp_path):
+    expected = {"BASE_DIR": tmp_path, "BLOB": {"FAKE": tmp_path / "staticfiles"}}
+
+    path = tmp_path / "pyproject.toml"
+    path.write_text("""
+[tool.django]
+BASE_DIR = { "$path" = "." }
+
+[tool.django.BLOB]
+FAKE = "${BASE_DIR}/staticfiles"
+""")
+
+    actual = Parser(path).parse_file()
+
+    assert expected == actual
+
+
+def test_variable_middle_path(tmp_path):
+    expected = {"BASE_DIR": Path("/something"), "STATIC_ROOT": Path("/blob/something/hello")}
+
+    path = tmp_path / "pyproject.toml"
+    path.write_text("""
+[tool.django]
+BASE_DIR = { "$path" = "/something" }
+STATIC_ROOT = "/blob${BASE_DIR}/hello"
+""")
+
+    actual = Parser(path).parse_file()
+
+    assert expected == actual
+
+
 def test_variable_end_path(tmp_path):
     expected = {"BASE_DIR": Path("/something"), "STATIC_ROOT": Path("/blob/something")}
 

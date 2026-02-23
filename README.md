@@ -23,23 +23,29 @@ ALLOWED_HOSTS = [
   "127.0.0.1",
 ]
 
-# Values can be casted to a bool, int, str, float, decimal, datetime, date, time, timedelta, url, Path
-SITE_ID = { "$value" = "1", "$type" = "int" }
+# Values can be cast to a bool, int, str, float, decimal, datetime, date, time, timedelta, url, Path
+SITE_ID = { "$int" = "1" }
+SITE_ID = { "$value" = "1", "$type" = "int" }  # This is equivalent to the previous line
+
+# Database, cache, and email URLs can be parsed and converted to typical Django dictionary settings
+DATABASES = { default = { "$db" = "postgres://user:pass@localhost:5432/dbname" } }
+CACHES = { default = { "$cache" = "redis://127.0.0.1:6379/1" } }
+EMAIL = { "$email" = "smtp://user:pass@smtp.example.com:587?tls=True" }
 
 # This is an implicit dictionary and equivalent to `COLTRANE = { TITLE = "Example blog" }`
 [tool.django.COLTRANE]
 TITLE = "Example blog"
 
-# Any name can be used under `apps` for organizational purposes
+# Any name can be used under the `apps` namespace to organize settings
 [tool.django.apps.tailwind-cli]
 TAILWIND_CLI_USE_DAISY_UI = true
 TAILWIND_CLI_SRC_CSS = ".django_tailwind_cli/source.css"
 
-# These settings are included when the `ENVIRONMENT` environment variable is "development"
+# The `envs` namespace can be used for environment-specific settings, e.g. these settings are included when the `ENVIRONMENT` environment variable is "development"
 [tool.django.envs.development]
 ALLOWED_HOSTS = { "$insert" = "example.localhost" }
 
-# These settings are included when the `ENVIRONMENT` environment variable is "production"
+# These settings would be included when the `ENVIRONMENT` environment variable is "production"
 [tool.django.envs.production]
 DEBUG = false
 ALLOWED_HOSTS = { "$insert" = "example.com" }
@@ -54,7 +60,7 @@ Use `${SOME_VARIABLE_NAME}` to use an existing setting as a value.
 ```toml
 [tool.django]
 GOOD_IPS = ["127.0.0.1"]
-ALLOWED_HOSTS = "${GOOD_IPS}"  # this needs to be quoted to be valid TOML, but will be converted into a `list`
+ALLOWED_HOSTS = "${GOOD_IPS}"  # note: this needs to be quoted as a string to be valid TOML, but will be converted into a `list`
 ```
 
 ### Apps
@@ -123,6 +129,27 @@ Specify the index of the new item with the `$index` key.
 ALLOWED_HOSTS = { "$insert" = "127.0.0.1", "$index" = 0 }
 ```
 
+#### Integer Access
+ 
+Modify specific elements of an array by using numeric sub-keys. This is particularly useful for overriding individual items in a list from different sections (like `envs`).
+ 
+```toml
+[tool.django.TEMPLATES.0]
+BACKEND = "django.template.backends.django.DjangoTemplates"
+DIRS = []
+APP_DIRS = true
+```
+ 
+If the array already exists, the specified index will be updated. If it does not exist, a new array will be created with the specified values.
+ 
+Operators now work at any depth, which is especially useful for nested Django settings like `DATABASES` or `CACHES`.
+
+```toml
+[tool.django.DATABASES.default]
+# This will insert an option into the existing default database configuration
+OPTIONS = { "$insert" = "some_option" }
+```
+
 ### None
 
 Specify `None` for a variable with a `$none` key. The value must be truthy, i.e. `true` or 1 (even though the value won't get used).
@@ -141,9 +168,32 @@ Specifies a value for a variable.
 SITE_ID = { "$value" = 1 }
 ```
 
-### Type
+#### URL Parsing Styles
 
-Casts the value to a particular type. Supported types: `bool`, `int`, `str`, `float`, `decimal`, `datetime`, `date`, `time`, `timedelta`, `url`, and `Path`. Especially helpful for values that come from environment variables which are usually read in as strings.
+Two styles are supported for parsing database, cache, and email URLs: **special** and **cast**.
+
+**Special**
+
+Use the `$db`, `$cache`, or `$email` operator.
+
+```toml
+[tool.django]
+DATABASES = { default = { "$db" = "postgres://user:pass@localhost:5432/dbname" } }
+CACHES = { default = { "$cache" = "redis://127.0.0.1:6379/1" } }
+EMAIL = { "$email" = "smtp://user:pass@smtp.example.com:587?tls=True" }
+```
+
+**Cast**
+
+Use `$value` and `$type` (useful when combining with other operators like `$env`).
+
+```toml
+[tool.django]
+DATABASES = { default = { "$value" = "sqlite:///:memory:", "$type" = "db" } }
+
+# Combining with environment variables
+CACHES = { default = { "$env" = "REDIS_URL", "$type" = "cache" } }
+```
 
 `$type` can be used as an additional operator with any other operator.
 

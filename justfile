@@ -10,3 +10,6 @@ _default:
 # Grab default `adamghill.justfile` from GitHub
 fetch:
   curl https://raw.githubusercontent.com/adamghill/dotfiles/master/just/justfile > adamghill.justfile
+
+serve:
+  cd example && uv run python manage.py runserver

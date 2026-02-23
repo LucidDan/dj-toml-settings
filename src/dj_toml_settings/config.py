@@ -1,21 +1,26 @@
+import logging
 from pathlib import Path
-
-from typeguard import typechecked
+from typing import Any
 
 from dj_toml_settings.toml_parser import Parser
 
-TOML_SETTINGS_FILES = ["pyproject.toml", "django.toml"]
+logger = logging.getLogger(__name__)
+
+TOML_SETTINGS_FILES = [
+    "pyproject.toml",
+    "django.toml",
+]
 
 
-@typechecked
-def get_toml_settings(base_dir: Path, data: dict | None = None, toml_settings_files: list[str] | None = None) -> dict:
-    """Gets the Django settings from the TOML files.
+def configure_toml_settings(
+    data: dict, base_dir: Path = Path("."), toml_settings_files: list[str] | None = None
+) -> None:
+    data.update(get_toml_settings(data=data, base_dir=base_dir, toml_settings_files=toml_settings_files))
 
-    TOML files to look in for settings:
-    - pyproject.toml
-    - django.toml
-    """
 
+def get_toml_settings(
+    data: dict | None = None, base_dir: Path = Path("."), toml_settings_files: list[str] | None = None
+) -> dict[str, Any]:
     toml_settings_files = toml_settings_files or TOML_SETTINGS_FILES
     data = data or {}
 
@@ -27,19 +32,3 @@ def get_toml_settings(base_dir: Path, data: dict | None = None, toml_settings_fi
             data.update(file_data)
 
     return data
-
-
-@typechecked
-def configure_toml_settings(base_dir: Path, data: dict) -> None:
-    """Configure Django settings from TOML files.
-
-    Args:
-        base_dir: Base directory to look for TOML files
-        data: Dictionary to update with settings from TOML files
-
-    Returns:
-        The updated dictionary with settings from TOML files
-    """
-
-    toml_settings = get_toml_settings(base_dir, data)
-    data.update(toml_settings)

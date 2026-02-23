@@ -1,11 +1,11 @@
 import logging
 import re
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from dateutil import parser as dateparser
 from typeguard import typechecked
+
+from dj_toml_settings.exceptions import InvalidActionError
 
 logger = logging.getLogger(__name__)
 
@@ -20,41 +20,49 @@ class VariableParser:
 
     def parse(self) -> Any:
         value: Any = self.value
+        has_path = False
 
-        for match in re.finditer(r"\$\{\w+\}", value):
-            data_key = value[match.start() : match.end()][2:-1]
+        while True:
+            val_to_search = value if isinstance(value, str) else str(value)
+            match = re.search(r"\$\{(\w+)\}", val_to_search)
+            if not match:
+                break
 
-            if variable := self.data.get(data_key):
+            data_key = match.group(1)
+            variable = self.data.get(data_key)
+
+            if variable is not None:
+                # If the variable is the entire string, return it in its original type
+                if match.group(0) == val_to_search:
+                    return variable
+
+                if isinstance(variable, list | dict) or callable(variable):
+                    raise InvalidActionError(f"Cannot interpolate {type(variable)} into a string: '{val_to_search}'")
+
                 if isinstance(variable, Path):
-                    path_str = combine_bookends(value, match, variable)
+                    has_path = True
 
-                    value = Path(path_str)
-                elif callable(variable):
-                    value = variable
-                elif isinstance(variable, int):
-                    value = combine_bookends(value, match, variable)
-
-                    try:
-                        value = int(value)
-                    except Exception:  # noqa: S110
-                        pass
-                elif isinstance(variable, float):
-                    value = combine_bookends(value, match, variable)
-
-                    try:
-                        value = float(value)
-                    except Exception:  # noqa: S110
-                        pass
-                elif isinstance(variable, list):
-                    value = variable
-                elif isinstance(variable, dict):
-                    value = variable
-                elif isinstance(variable, datetime):
-                    value = dateparser.isoparse(str(variable))
-                else:
-                    value = value.replace(match.string, str(variable))
+                # Otherwise, smush it into the string
+                value = combine_bookends(str(value), match, variable)
             else:
-                logger.warning(f"Missing variable substitution {value}")
+                logger.warning(f"Missing variable substitution {match.group(0)}")
+                # Break to avoid infinite loop if replacement is skipped
+                break
+
+        if has_path:
+            return Path(value)
+
+        # Try to cast to int or float if it looks like one
+        if isinstance(value, str):
+            try:
+                return int(value)
+            except Exception:  # noqa: S110
+                pass
+
+            try:
+                return float(value)
+            except Exception:  # noqa: S110
+                pass
 
         return value
 

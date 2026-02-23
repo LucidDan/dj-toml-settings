@@ -29,7 +29,7 @@ def test_bool():
     with pytest.raises(ValueError) as e:
         assert parser.parse(1.1)
 
-    assert "ValueError: Failed to convert 1.1 to bool: Type must be a string or int, got float" in e.exconly()
+    assert "ValueError: Failed to convert 1.1 to bool: Type must be a string, int, or bool, got float" in e.exconly()
 
 
 def test_int():

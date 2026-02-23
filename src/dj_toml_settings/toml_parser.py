@@ -15,11 +15,13 @@ else:
 
 from dj_toml_settings.value_parsers.dict_parsers import (
     EnvParser,
+    GenericTypeParser,
     InsertParser,
     NoneParser,
     PathParser,
     TypeParser,
     ValueParser,
+    get_value_by_path,
 )
 from dj_toml_settings.value_parsers.str_parsers import VariableParser
 
@@ -54,14 +56,14 @@ class Parser:
         for key, value in toml_data.items():
             logger.debug(f"tool.django: Update '{key}' with '{value}'")
 
-            self.data.update({key: self.parse_value(key, value)})
+            self.data.update({key: self.parse_value(key, value, key_path=key)})
 
         # Add settings from `tool.django.apps.*`
         for apps_name, apps_value in apps_data.items():
             for app_key, app_value in apps_value.items():
                 logger.debug(f"tool.django.apps.{apps_name}: Update '{app_key}' with '{app_value}'")
 
-                self.data.update({app_key: self.parse_value(app_key, app_value)})
+                self.data.update({app_key: self.parse_value(app_key, app_value, key_path=app_key)})
 
         # Add settings from `tool.django.envs.*` if it matches the `ENVIRONMENT` env variable
         if environment_env_variable := os.getenv("ENVIRONMENT"):
@@ -70,7 +72,7 @@ class Parser:
                     for env_key, env_value in envs_value.items():
                         logger.debug(f"tool.django.envs.{envs_name}: Update '{env_key}' with '{env_value}'")
 
-                        self.data.update({env_key: self.parse_value(env_key, env_value)})
+                        self.data.update({env_key: self.parse_value(env_key, env_value, key_path=env_key)})
 
         return self.data
 
@@ -91,7 +93,7 @@ class Parser:
         return data.get("tool", {}).get("django", {}) or {}
 
     @typechecked
-    def parse_value(self, key: Any, value: Any) -> Any:
+    def parse_value(self, key: Any, value: Any, key_path: str | None = None) -> Any:
         """Handle special cases for `value`.
 
         Special cases:
@@ -111,19 +113,42 @@ class Parser:
             processed_list = []
 
             for item in value:
-                processed_item = self.parse_value(key, item)
+                processed_item = self.parse_value(key, item, key_path=key_path)
                 processed_list.append(processed_item)
 
             value = processed_list
         elif isinstance(value, dict):
+            # Check if all keys are integers (digits) which indicates this should be a list
+            if value and all(str(k).isdigit() for k in value.keys()):
+                # Get the existing list from data if it exists
+                existing_list = []
+
+                if key_path:
+                    val = get_value_by_path(self.data, key_path)
+
+                    if isinstance(val, list):
+                        existing_list = list(val)
+
+                # Determine the size of the list
+                max_index = max(int(k) for k in value.keys())
+                needed_size = max(len(existing_list), max_index + 1)
+
+                # Pad the list with None if needed
+                processed_list = existing_list + [None] * (needed_size - len(existing_list))
+
+                for k, v in value.items():
+                    index = int(k)
+                    new_key_path = f"{key_path}.{k}" if key_path else k
+                    processed_list[index] = self.parse_value(k, v, key_path=new_key_path)
+
+                return processed_list
+
             # Process nested dictionaries
             processed_dict = {}
 
             for k, v in value.items():
-                if isinstance(v, dict):
-                    processed_dict.update({k: self.parse_value(key, v)})
-                else:
-                    processed_dict[k] = v
+                new_key_path = f"{key_path}.{k}" if key_path else k
+                processed_dict[k] = self.parse_value(k, v, key_path=new_key_path)
 
             value = processed_dict
 
@@ -132,10 +157,18 @@ class Parser:
             path_parser = PathParser(data=self.data, value=value, path=self.path)
             value_parser = ValueParser(data=self.data, value=value)
             none_parser = NoneParser(data=self.data, value=value)
-            insert_parser = InsertParser(data=self.data, value=value, data_key=key)
+            insert_parser = InsertParser(data=self.data, value=value, data_key=key_path or key)
+            shorthand_type_parser = GenericTypeParser(data=self.data, value=value)
 
             # Check for a match for all operators (except $type)
-            for parser in [env_parser, path_parser, value_parser, insert_parser, none_parser]:
+            for parser in [
+                env_parser,
+                path_parser,
+                value_parser,
+                insert_parser,
+                none_parser,
+                shorthand_type_parser,
+            ]:
                 if parser.match():
                     value = parser.parse()
                     break
@@ -143,6 +176,7 @@ class Parser:
             # Parse $type last because it can operate on the resolved value from the other parsers
             if type_parser.match():
                 value = type_parser.parse(value)
+
         elif isinstance(value, str):
             value = VariableParser(data=self.data, value=value).parse()
         elif isinstance(value, datetime):
