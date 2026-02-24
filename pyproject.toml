@@ -30,7 +30,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "dj-typed-settings>=0.1.0",
+    "dj-typed-settings>=0.3.1",
     "python-dateutil>=2.9.0.post0",
     "tomli>=1.1.0; python_version < '3.11'",
     "typeguard>=2",

@@ -16,7 +16,7 @@ wheels = [
 
 [[package]]
 name = "dj-toml-settings"
-version = "0.6.0"
+version = "0.5.0"
 source = { editable = "../" }
 dependencies = [
     { name = "dj-typed-settings" },
@@ -27,7 +27,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dj-typed-settings", specifier = ">=0.1.0" },
+    { name = "dj-typed-settings", specifier = ">=0.3.1" },
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=1.1.0" },
     { name = "typeguard", specifier = ">=2" },
@@ -60,14 +60,14 @@ requires-dist = [
 
 [[package]]
 name = "dj-typed-settings"
-version = "0.3.0"
+version = "0.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/96/77/21a9cf4e35e4bd4166cde4513d32dd0944714f2492d221fe985ca6cfcb53/dj_typed_settings-0.3.0.tar.gz", hash = "sha256:352357fc008fb567b223d05d1608061e29f53897156c8c3a722d2eacafcd1f2c", size = 117392, upload-time = "2026-02-16T00:51:09.725Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/a0/96403fe78736b538a267aa287be8a44121d35c28126b48c3a7062d7a3214/dj_typed_settings-0.3.1.tar.gz", hash = "sha256:b96a4f6833e71c5ed1fea4ea91e5ea881a89f60792aa9438d9586396db433bf2", size = 117147, upload-time = "2026-02-23T03:47:48.678Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4c/b5/80f8b3249c8fe2ff5e84d9249b6d4cebd9aee4be0f4f01fa02b58925951f/dj_typed_settings-0.3.0-py3-none-any.whl", hash = "sha256:567d403fc787c5b852f05e9184a45ce1016cbb79c28a5e481e7709642adb99f7", size = 32266, upload-time = "2026-02-16T00:51:07.405Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/d6/8d27f339bc07ef0e81cc28d38fc87a37ed179648c869d28b745c57de5d92/dj_typed_settings-0.3.1-py3-none-any.whl", hash = "sha256:b46775d4dff4c7b6741c397a9f4c90f87985e49e36a4f84fb7b8498737f4aeb2", size = 32000, upload-time = "2026-02-23T03:47:47.464Z" },
 ]
 
 [[package]]
