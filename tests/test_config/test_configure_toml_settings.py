@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from dj_toml_settings.config import configure_toml_settings
 
 
@@ -90,10 +92,6 @@ ALLOWED_HOSTS = ["127.0.0.3"]
     assert expected == actual
 
 
-import pprint
-from pathlib import Path
-
-
 def test_default_settings():
     test_dir = Path(__file__).parent
 
@@ -169,6 +167,5 @@ def test_default_settings():
 
     actual = {}
     configure_toml_settings(base_dir=test_dir, data=actual)
-    pprint.pprint(actual)
 
     assert expected == actual
