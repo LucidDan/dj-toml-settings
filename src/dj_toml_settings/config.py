@@ -34,13 +34,12 @@ def configure_toml_settings(
 
     if data is not None:
         data.update(toml_settings)
+    elif django_settings_module := os.getenv("DJANGO_SETTINGS_MODULE"):
+        module = importlib.import_module(django_settings_module)
+
+        for k, v in toml_settings.items():
+            setattr(module, k, v)
     else:
-        if django_settings_module := os.getenv("DJANGO_SETTINGS_MODULE"):
-            module = importlib.import_module(django_settings_module)
-
-            for k, v in toml_settings.items():
-                setattr(module, k, v)
-
         raise RuntimeError("No DJANGO_SETTINGS_MODULE environment variable configured")
 
 

@@ -1,6 +1,8 @@
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 from dj_toml_settings.config import configure_toml_settings
 
 
@@ -175,7 +177,7 @@ def test_default_settings():
 def test_configure_toml_settings_without_data_parameter(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "dj_toml_settings.config.get_toml_settings",
-        lambda *_: {
+        lambda **_: {
             "DEBUG": True,
         },
     )
@@ -190,3 +192,10 @@ def test_configure_toml_settings_without_data_parameter(monkeypatch, tmp_path):
     configure_toml_settings(base_dir=tmp_path)
 
     assert settings_module.DEBUG is True
+
+
+def test_configure_toml_settings_without_dsm(monkeypatch, tmp_path):
+    monkeypatch.delenv("DJANGO_SETTINGS_MODULE", raising=False)
+
+    with pytest.raises(RuntimeError, match="No DJANGO_SETTINGS_MODULE environment variable configured"):
+        configure_toml_settings(base_dir=tmp_path)
